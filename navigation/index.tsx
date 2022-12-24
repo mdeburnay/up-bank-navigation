@@ -140,7 +140,11 @@ export const TabNavBar = ({
               onLongPress={onLongPress}
               style={{ position: "relative", paddingHorizontal: 20 }}
             >
-              <Animated.Text style={{ fontSize: 14 }}>{label}</Animated.Text>
+              <Animated.Text
+                style={{ fontSize: 14, fontWeight: isFocused ? "bold" : "400" }}
+              >
+                {label}
+              </Animated.Text>
             </TouchableOpacity>
           );
         })}
