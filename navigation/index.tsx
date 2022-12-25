@@ -1,4 +1,4 @@
-import { Animated, View, TouchableOpacity } from "react-native";
+import { Animated, View, TouchableOpacity, Dimensions } from "react-native";
 import {
   NavigationContainer,
   DefaultTheme,
@@ -67,24 +67,33 @@ export const TabNavBar = ({
   position,
   layout,
 }: MaterialTopTabBarProps): JSX.Element => {
-  const [tabPostion, setTabPosition] = React.useState(0);
+  const [widthsOfTabs, setWidthsOfTabs] = React.useState<{
+    [key: number]: number;
+  }>(
+    state.routes
+      .map((_: any, i: number) => i)
+      .reduce((acc: any, curr: any) => ((acc[curr] = 0), acc), {})
+  );
 
-  const routes = state.routes.length;
+  const widthWindow = Dimensions.get("window").width;
 
-  const { width } = layout;
+  // this thing animates
+  const inputRange = state.routes.map((_: any, i: number) => i);
 
-  const tabDifference = width / routes;
-
-  const inputRange = [state.index - 1, state.index, state.index + 1];
-
-  const translateXPosition = position.interpolate({
+  const left = position.interpolate({
     inputRange,
-    outputRange: [tabDifference, 0, -tabDifference],
+    outputRange: inputRange.map(
+      (i) =>
+        widthWindow / 2 -
+        Object.values(widthsOfTabs)
+          .slice(0, i)
+          .reduce((pV, cV) => pV + cV, 0) -
+        widthsOfTabs[i] / 2
+      // - (i === 0 ? 0 : 20 * i)
+      // If you have padding inbetween the headers you
+      // would do something like the above
+    ),
   });
-
-  React.useEffect(() => {
-    setTabPosition(translateXPosition);
-  }, []);
 
   return (
     <View
@@ -99,9 +108,7 @@ export const TabNavBar = ({
         style={{
           flex: 1,
           flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          transform: [{ translateX: tabPostion }],
+          transform: [{ translateX: left }],
         }}
       >
         {state.routes.map((route, index) => {
@@ -138,6 +145,10 @@ export const TabNavBar = ({
               testID={`tab-${index}`}
               onPress={onPress}
               onLongPress={onLongPress}
+              onLayout={(event) => {
+                var { width } = event.nativeEvent.layout;
+                setWidthsOfTabs((state) => ({ ...state, [index]: width }));
+              }}
               style={{ position: "relative", paddingHorizontal: 20 }}
             >
               <Animated.Text
